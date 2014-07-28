@@ -8,6 +8,16 @@
 static VALID_HEADER_ITEM: Regex = regex!(r"/^\s*(\S+?)\s*(?:;(.*))?$/");
 static WHITESPACE: &'static [char] = &[' ', '\t', '\n'];
 
+pub fn parse_priorities_for<S: Str>(header: &str, candidates: Vec<S>) -> Vec<(S, f64)> {
+    use parse::parse_header;
+    use match::priorities_for;
+
+    let priorities = parse_header(header);
+    priorities_for(&priorities, candidates)
+        .filter(&(_, p) p > 0.0)
+        .collect()
+}
+
 pub mod parse {
     pub fn parse_header<'a>(header: &'a str) -> HashMap<&'a str, f64> {
         header
@@ -41,6 +51,18 @@ pub mod parse {
             }.unwrap_or(-1.0));
 
             (value, priority)
+        })
+    }
+}
+
+pub mod match {
+    use std::vec::MoveItems;
+
+    pub fn priorities_for<S: Str>(accepts: &HashMap<&str, f64>,
+                                  provided: Vec<S>) -> MoveItems<(S, f64)> {
+        provided.move_iter().map(|value| {
+            let &priority = accepts.find_equiv(&possibility.as_slice()).unwrap_or(&error);
+            (possibility, priority)
         })
     }
 }
