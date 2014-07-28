@@ -14,20 +14,26 @@ use regex::Regex;
 static VALID_HEADER_ITEM: Regex = regex!(r"/^\s*(\S+?)\s*(?:;(.*))?$/");
 static WHITESPACE: &'static [char] = &[' ', '\t', '\n'];
 
-pub fn parse_priorities_for<S: Str>(header: &str, candidates: Vec<S>) -> Vec<(S, f64)> {
+/// Get the priorities for several candidates from an unparsed header.
+///
+/// `parse_priorities_for("a;q=0.7,b;q=0.3", vec!["a", "b"])` will give back
+/// `vec![("a", 0.7), ("b", 0.3)]`
+pub fn parse_priorities_for<S: Str>(header: S, candidates: Vec<S>) -> Vec<(S, f64)> {
     use parser::parse_header;
     use matcher::priorities_for;
 
-    let priorities = parse_header(header);
+    let priorities = parse_header(header.as_slice());
     priorities_for(&priorities, candidates).move_iter()
         .filter(|&(_, p)| p > 0.0)
         .collect()
 }
 
+/// Contains the parser for priority headers such as Accept-Encoding
 pub mod parser {
     use super::{VALID_HEADER_ITEM, WHITESPACE};
     use std::collections::HashMap;
 
+    /// Parse a priority header into a HashMap of values to their priorities.
     pub fn parse_header<'a>(header: &'a str) -> HashMap<&'a str, f64> {
         header
             .trim_chars(WHITESPACE)
@@ -64,11 +70,11 @@ pub mod parser {
     }
 }
 
+/// Convenience functions for working with priorities.
 pub mod matcher {
     use std::collections::HashMap;
-    use std::vec::MoveItems;
-    use std::iter::Map;
 
+    /// Get priorities for several values
     pub fn priorities_for<S: Str>(accepts: &HashMap<&str, f64>,
                                   provided: Vec<S>) -> Vec<(S, f64)> {
         let error = -1.0;
