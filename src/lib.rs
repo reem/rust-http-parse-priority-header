@@ -7,11 +7,11 @@
 //! Parser for HTTP priority headers such as Accept-Encoding
 
 extern crate regex;
-#[phase(plugin, link)] extern crate regex_macros;
+#[phase(plugin)] extern crate regex_macros;
 
 use regex::Regex;
 
-static VALID_HEADER_ITEM: Regex = regex!(r"/^\s*(\S+?)\s*(?:;(.*))?$/");
+static VALID_HEADER_ITEM: Regex = regex!(r"^\s*(\S+?)\s*((;(.*)+))?$");
 static WHITESPACE: &'static [char] = &[' ', '\t', '\n'];
 
 /// Get the priorities for several candidates from an unparsed header.
@@ -42,7 +42,8 @@ pub mod parser {
     }
 
 
-    fn parse_header_item(header_item: &str) -> Option<(&str, f64)> {
+    #[doc(hidden)]
+    pub fn parse_header_item(header_item: &str) -> Option<(&str, f64)> {
         // Is this a valid header item? Extract its values.
         VALID_HEADER_ITEM.captures(header_item).map(|captures| {
             let value = captures.at(1);
@@ -90,6 +91,7 @@ mod test {
     pub use super::matcher::*;
     pub use super::parser::*;
     pub use super::parse_priorities_for;
+    pub use super::VALID_HEADER_ITEM;
 
     mod end_to_end {
         use super::*;
@@ -97,17 +99,27 @@ mod test {
         #[test]
         fn test() {
             assert_eq!(parse_priorities_for("a;q=0.7,b;q=0.3", vec!["a", "b"]),
-                       vec![("a", 0.7), ("b", 0.3)]);
+                       vec![("a", from_str("0.7").unwrap()), ("b", from_str("0.3").unwrap())]);
         }
     }
 
     mod parser {
         use super::*;
 
+        #[test]
+        fn test_header_item() {
+            assert_eq!(parse_header_item("a;q=0.7"), Some(("a", from_str("0.7").unwrap())));
+        }
+
     }
 
     mod matcher {
         use super::*;
+    }
+
+    #[test]
+    fn test_valid_header_item() {
+        assert!(VALID_HEADER_ITEM.is_match("a;q=0.7"));
     }
 }
 
