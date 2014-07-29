@@ -1,5 +1,5 @@
 #![license = "MIT"]
-#![feature(phase, globs)]
+#![feature(phase, globs, macro_rules)]
 #![deny(missing_doc)]
 #![deny(unnecessary_qualification, non_camel_case_types,
         unused_variable, unnecessary_typecast)]
@@ -11,7 +11,7 @@ extern crate regex;
 
 use regex::Regex;
 
-static VALID_HEADER_ITEM: Regex = regex!(r"^\s*(\S+?)\s*((;(.*)+))?$");
+static VALID_HEADER_ITEM: Regex = regex!(r"^\s*([A-Za-z0-9/\*-]+?)\s*((;(.*)+))?$");
 static WHITESPACE: &'static [char] = &[' ', '\t', '\n'];
 
 /// Get the priorities for several candidates from an unparsed header.
@@ -106,11 +106,27 @@ mod test {
     mod parser {
         use super::*;
 
-        #[test]
-        fn test_header_item() {
-            assert_eq!(parse_header_item("a;q=0.7"), Some(("a", from_str("0.7").unwrap())));
-        }
+        macro_rules! parser_header_item_test (
+            ($name:ident, $accept:expr, ($value:expr, $priority:expr)) => {
+                #[test]
+                fn $name() {
+                    assert_eq!(parse_header_item($accept),
+                               Some(($value, from_str(stringify!($priority)).unwrap())));
+                }
+            }
+        )
 
+        macro_rules! parser_header_item_test_failing (
+            ($name:ident, $accept:expr) => {
+                #[test]
+                fn $name() { assert_eq!(parse_header_item($accept), None); }
+            }
+        )
+
+        parser_header_item_test!(test_simple, "utf-8", ("utf-8", 1.0))
+        parser_header_item_test!(test_priority, "gzip;q=0.8", ("gzip", 0.8))
+        parser_header_item_test!(test_priority_with_options, "deflate;q=0.9;b=0.8", ("deflate", 0.9))
+        parser_header_item_test_failing!(test_invalid_header, "%%;%&==")
     }
 
     mod matcher {
