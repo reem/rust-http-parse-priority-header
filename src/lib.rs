@@ -1,5 +1,5 @@
 #![license = "MIT"]
-#![feature(phase)]
+#![feature(phase, globs)]
 #![deny(missing_doc)]
 #![deny(unnecessary_qualification, non_camel_case_types,
         unused_variable, unnecessary_typecast)]
@@ -82,6 +82,32 @@ pub mod matcher {
             let &priority = accepts.find_equiv(&value.as_slice()).unwrap_or(&error);
             (value, priority)
         }).collect()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    pub use super::matcher::*;
+    pub use super::parser::*;
+    pub use super::parse_priorities_for;
+
+    mod end_to_end {
+        use super::*;
+
+        #[test]
+        fn test() {
+            assert_eq!(parse_priorities_for("a;q=0.7,b;q=0.3", vec!["a", "b"]),
+                       vec![("a", 0.7), ("b", 0.3)]);
+        }
+    }
+
+    mod parser {
+        use super::*;
+
+    }
+
+    mod matcher {
+        use super::*;
     }
 }
 
