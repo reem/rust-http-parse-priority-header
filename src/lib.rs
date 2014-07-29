@@ -18,6 +18,9 @@ static WHITESPACE: &'static [char] = &[' ', '\t', '\n'];
 ///
 /// `parse_priorities_for("a;q=0.7,b;q=0.3", vec!["a", "b"])` will give back
 /// `vec![("a", 0.7), ("b", 0.3)]`
+///
+/// Malformed header items have priority -1. Unaccepted values will not be
+/// returned.
 pub fn parse_priorities_for<S: Str>(header: S, candidates: Vec<S>) -> Vec<(S, f64)> {
     use parser::parse_header;
     use matcher::priorities_for;
