@@ -21,7 +21,7 @@ static WHITESPACE: &'static [char] = &[' ', '\t', '\n'];
 ///
 /// Malformed header items have priority -1. Unaccepted values will not be
 /// returned.
-pub fn parse_priorities_for<S: Str>(header: S, candidates: Vec<S>) -> Vec<(S, f64)> {
+pub fn parse_priorities_for<S1: Str, S2: Str>(header: S1, candidates: Vec<S2>) -> Vec<(S2, f64)> {
     use parser::parse_header;
     use matcher::priorities_for;
 
